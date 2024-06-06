@@ -4,11 +4,7 @@
   "description": "Backend Binance",
   "main": "src/server.js",
   "scripts": {
-    "build": "tsc src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-    "start:prod": "node dist/server.js",
-    "dev": "nodemon --watch src --exec ts-node src/server.ts"
   },
   "author": "Danieldev",
   "license": "ISC",
