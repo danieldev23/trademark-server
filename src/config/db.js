@@ -5,7 +5,6 @@ async function connect(dbname) {
   try {
     await databaseClient.connect(dbname, {});
     console.log("Connect to MongoDB successfully!");
-    
   } catch (err) {
     console.log(`Error connecting to Mongo`);
   }
