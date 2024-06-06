@@ -1,0 +1,32 @@
+{
+  "name": "binance",
+  "version": "1.0.0",
+  "description": "Backend Binance",
+  "main": "src/server.js",
+  "scripts": {
+    "build": "tsc src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "start:prod": "node dist/server.js",
+    "dev": "nodemon --watch src --exec ts-node src/server.ts"
+  },
+  "author": "Danieldev",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.0"
+  }
+}
