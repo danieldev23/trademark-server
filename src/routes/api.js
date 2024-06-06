@@ -302,6 +302,24 @@ router.get("/home/settings", (req, res) => {
     websiteName: "BO Web",
   });
 });
+router.get("/transactions", async (req, res) => {
+  try {
+    const [listSell, listBuy] = await Promise.all([getListSell(), getListBuy()]);
+    return res.json({
+      success: true,
+      transactions: {
+        sell: listSell,
+        buy: listBuy
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching transactions."
+    });
+  }
+});
 
 router.get("/sell/list", async (req, res) => {
   const listSell = await getListSell();
