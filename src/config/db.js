@@ -1,9 +1,9 @@
 const databaseClient = require("mongoose");
 const dbName = "BO_DB";
 
-async function connect() {
+async function connect(dbname) {
   try {
-    await databaseClient.connect(`mongodb+srv://huydq23itb:OZ959l8m1ORJbiPe@trademark.qbrpwak.mongodb.net/`, {
+    await databaseClient.connect(dbname, {
       // useUnifiedTopology: true,
       useNewUrlParser: true,
     });
