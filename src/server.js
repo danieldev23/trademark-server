@@ -1,9 +1,10 @@
+require("dotenv").config();
 const express = require('express');
 const cors = require("cors");
 const db = require('./config/db');
 
-const port = 3000;
-const dbname = "mongodb+srv://huydq23itb:OZ959l8m1ORJbiPe@trademark.qbrpwak.mongodb.net/";
+const port = process.env.PORT || 3000;
+const dbname = process.env.URL_DB;
 
 const app = express();
 const route = require('./routes');
