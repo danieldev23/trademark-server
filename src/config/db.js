@@ -4,7 +4,7 @@ const dbName = "BO_DB";
 async function connect() {
   try {
     await databaseClient.connect(`mongodb+srv://huydq23itb:OZ959l8m1ORJbiPe@trademark.qbrpwak.mongodb.net/`, {
-      useUnifiedTopology: true,
+      // useUnifiedTopology: true,
       useNewUrlParser: true,
     });
     console.log("Connect to MongoDB successfully!");
