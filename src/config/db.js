@@ -3,10 +3,7 @@ const dbName = "BO_DB";
 
 async function connect(dbname) {
   try {
-    await databaseClient.connect(dbname, {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
-    });
+    await databaseClient.connect(dbname, {});
     console.log("Connect to MongoDB successfully!");
     
   } catch (err) {
