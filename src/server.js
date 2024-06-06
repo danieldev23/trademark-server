@@ -4,8 +4,8 @@ const cors = require("cors");
 const db = require('./config/db');
 
 const port = process.env.PORT || 3000;
-const dbname = process.env.URL_DB;
-
+const dbname = process.env.MONGODB_CONNECT_URI;
+console.log(`DB is: ${process.env.URL_DB}`);
 const app = express();
 const route = require('./routes');
 const bodyParser = require('body-parser');
