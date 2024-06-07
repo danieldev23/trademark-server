@@ -4,25 +4,29 @@ const Schema = mongoose.Schema;
 const coinSchema = new Schema({
     type: {
         type: String,
-        required: true
+        // required: true
     },
     amount: {
         type: String,
-        required: true
+        // required: true
     }
 });
 
 const walletSchema = new Schema({
     username: {
         type: String,
-        ref: 'User',
-        required: true
+        // ref: 'User',
+        // required: true
     },
     balance: {
         type: String,
-        required: true
+        default: 0,
+        // required: true
     },
-    coins: [coinSchema] 
+    coins: {
+        type: [coinSchema],
+        default: []
+    }
 });
 
 const Wallet = mongoose.model('Wallet', walletSchema);

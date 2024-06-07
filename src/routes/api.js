@@ -47,13 +47,17 @@ router.use((req, res, next) => {
 });
 
 router.get("/wallet/:username", async (req, res) => {
+  const { username } = req.params;
   try {
-    const wallet = await Wallet.findOne({ username: req.params.username });
+    const wallet = await Wallet.findOne({ username });
+    console.log("Wallet details for username:", req.params.username, wallet);
     if (wallet) {
       return res.json({
         success: true,
-        wallet: wallet.coin,
-        balance: wallet.balance,
+        wallet: {
+          coins: wallet.coins,
+          balance: wallet.balance,
+        },
       });
     } else {
       return res.json({
@@ -62,7 +66,7 @@ router.get("/wallet/:username", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error(error);
+    console.error("An error occurred while retrieving the wallet:", error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while retrieving wallet.",
@@ -72,7 +76,7 @@ router.get("/wallet/:username", async (req, res) => {
 // Đăng ký người dùng
 router.post("/user/create", async (req, res) => {
   try {
-    const exists = await User.findOne({ email: req.body.email });
+    const exists = await User.findOne({ email: req.body.email, username: req.body.username});
 
     if (exists) {
       return res.json({
@@ -82,16 +86,20 @@ router.post("/user/create", async (req, res) => {
     } else {
       // Mã hóa mật khẩu
       const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
+      const username = genUsername(req.body.name);
       const newUser = {
         name: req.body.name,
         roles: ["user"], // Đảm bảo roles là một mảng
-        username: genUsername(req.body.name),
+        username: username,
         phoneNumber: req.body.phoneNumber,
         email: req.body.email,
         password: hashedPassword,
       };
-
+      const newWallet = await Wallet.create({
+        username: username,
+        balance: "0",
+        coin: [],
+      });
       const status = await User.create(newUser);
       if (status) {
         // Tạo token sau khi đăng ký thành công
@@ -178,33 +186,51 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/user/add-coin/:username", async (req, res) => {
+router.post("/user/add/balance/:username", async (req, res) => {
+  const { username } = req.params;
+  const { amount } = req.body;
+  console.log(typeof(amount));
   try {
-    const coin = req.body.coin;
-    const addCoin = User.findOneAndUpdate(
-      { username: req.params.username },
-      { wallet: coin },
-      { new: true }
-    );
-    if (addCoin) {
-      return res.json({
-        success: true,
-        message: "Add coin successfully!",
-      });
-    } else {
+    const wallet = await Wallet.findOne({username});
+    console.log(wallet);
+    if(wallet) {
+      const total = Number(wallet.balance) + Number(amount);
+      const status = await Wallet.findOneAndUpdate(
+        { username },
+        { balance: total.toString(),
+          new: true
+         },
+        
+      );
+      if (status) {
+        return res.json({
+          success: true,
+          message: "Balance added successfully!",
+        });
+      } else {
+        return res.json({
+          success: false,
+          message: "Failed to add balance!",
+        });
+      }
+    
+    }
+    else {
       return res.json({
         success: false,
-        message: "Add coin failed!",
+        message: "Wallet not found!",
       });
     }
-  } catch (e) {
-    console.error(e);
+  }
+  catch (error) {
+    console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during adding coin.",
+      message: "An error occurred while adding balance.",
     });
   }
 });
+
 router.get("/users", async (req, res) => {
   try {
     const allUser = await getUser();

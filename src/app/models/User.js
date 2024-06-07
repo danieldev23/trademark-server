@@ -7,7 +7,7 @@ const userSchema = new Schema({
         
     },
     roles: {
-        type: []
+        type: [String]
     }
     ,
     username: {
