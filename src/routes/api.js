@@ -4,6 +4,7 @@ const { getListSell, getListBuy } = require("../utils/getTransaction");
 const router = express.Router();
 const { formatDate } = require("../utils/getCurrentDate");
 const User = require("../app/models/User");
+const Wallet = require("../app/models/Wallet");
 const { genUsername } = require("../utils/genUsername");
 const Transaction = require("../app/models/Transaction");
 const { getCurrentCoin } = require("../utils/getCurrentCoin");
@@ -19,6 +20,29 @@ function createToken(payload) {
   return jwt.sign(payload, secretKey, { expiresIn });
 }
 
+
+router.get("/wallet/:username", async (req, res) => {
+  try {
+    const wallet = await Wallet.findOne({ username: req.params.username });
+    if (wallet) {
+      return res.json({
+        success: true,
+        wallet: wallet.coin,
+        balance: wallet.balance,     });
+    } else {
+      return res.json({
+        success: false,
+        message: "Wallet not found!",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while retrieving wallet.",
+    });
+  }
+});
 // Middleware
 function checkToken(req, res, next) {
   const token = req.headers["authorization"];
