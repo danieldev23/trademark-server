@@ -20,29 +20,6 @@ function createToken(payload) {
   return jwt.sign(payload, secretKey, { expiresIn });
 }
 
-
-router.get("/wallet/:username", async (req, res) => {
-  try {
-    const wallet = await Wallet.findOne({ username: req.params.username });
-    if (wallet) {
-      return res.json({
-        success: true,
-        wallet: wallet.coin,
-        balance: wallet.balance,     });
-    } else {
-      return res.json({
-        success: false,
-        message: "Wallet not found!",
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred while retrieving wallet.",
-    });
-  }
-});
 // Middleware
 function checkToken(req, res, next) {
   const token = req.headers["authorization"];
@@ -63,6 +40,35 @@ function checkToken(req, res, next) {
       .json({ success: false, message: "Tokens not provided." });
   }
 }
+
+router.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+router.get("/wallet/:username", async (req, res) => {
+  try {
+    const wallet = await Wallet.findOne({ username: req.params.username });
+    if (wallet) {
+      return res.json({
+        success: true,
+        wallet: wallet.coin,
+        balance: wallet.balance,
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "Wallet not found!",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while retrieving wallet.",
+    });
+  }
+});
 // Đăng ký người dùng
 router.post("/user/create", async (req, res) => {
   try {
@@ -115,15 +121,18 @@ router.post("/user/create", async (req, res) => {
 });
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body; 
-    const user = await User.findOne({ email }); 
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
     if (user) {
       console.log("User: ", user);
       // So sánh mật khẩu đã mã hóa
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
-        const token = createToken({ username: user.username, roles: user.roles });
+        const token = createToken({
+          username: user.username,
+          roles: user.roles,
+        });
         console.log("Roles: ", user.roles);
         if (user.roles.includes("admin")) {
           return res.json({
@@ -328,19 +337,22 @@ router.get("/home/settings", (req, res) => {
 });
 router.get("/transactions", async (req, res) => {
   try {
-    const [listSell, listBuy] = await Promise.all([getListSell(), getListBuy()]);
+    const [listSell, listBuy] = await Promise.all([
+      getListSell(),
+      getListBuy(),
+    ]);
     return res.json({
       success: true,
       transactions: {
         sell: listSell,
-        buy: listBuy
-      }
+        buy: listBuy,
+      },
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while fetching transactions."
+      message: "An error occurred while fetching transactions.",
     });
   }
 });

@@ -13,10 +13,7 @@ const bodyParser = require("body-parser");
 db.connect(dbname);
 app.use(cors());
 // Middleware to log request
-router.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-  next();
-});
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 route(app);
