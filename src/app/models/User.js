@@ -28,6 +28,9 @@ const userSchema = new Schema({
     password: {
         type: String
     },
+    coin: {
+        type: []
+    },
     wallet: {
         type: String,
         default: "0"
