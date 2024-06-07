@@ -243,11 +243,11 @@ router.get("/users", async (req, res) => {
     });
   }
 });
-router.post("/user/bank/update/:username", async (req, res) => {
+router.post("/user/info/update/", async (req, res) => {
   try {
-    const { bankName, bankNumber } = req.body;
+    const { email, bankName, bankNumber } = req.body;
     const user = await User.findOneAndUpdate(
-      { username: req.params.username },
+      { email },
       { bankName, bankNumber }
     );
     if (user) {
