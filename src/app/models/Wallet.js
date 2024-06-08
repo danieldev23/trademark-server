@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const coinSchema = new Schema({
-    type: {
+    coinCode: {
         type: String,
         // required: true
     },
-    amount: {
+    balanceCoin: {
         type: String,
         // required: true
     }

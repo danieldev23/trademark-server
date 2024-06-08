@@ -1,20 +1,12 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
 const coinSchema = new Schema({
-  coinName: {
-    type: String,
+  coinCode: {
+      type: String,
+      // required: true
   },
-  coinAmount: {
-    type: String,
-  },
-  currentPrice: {
-    type: String,
-  },
-  priceChange: {
-    type: String,
-  },
+  balanceCoin: {
+      type: String,
+      // required: true
+  }
 });
 
-const Coin = mongoose.model("Coin", coinSchema);
-module.exports = Coin;

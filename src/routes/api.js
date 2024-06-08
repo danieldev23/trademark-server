@@ -2,6 +2,7 @@ const express = require("express");
 const { getUser, getWallet } = require("../app/controllers/HomeController");
 const { getListSell, getListBuy } = require("../utils/getTransaction");
 const router = express.Router();
+const { getBalance } = require("../utils/getBalance");
 const { formatDate } = require("../utils/getCurrentDate");
 const User = require("../app/models/User");
 const Wallet = require("../app/models/Wallet");
@@ -42,7 +43,9 @@ function checkToken(req, res, next) {
 }
 
 router.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleString("vi-VN")}] ${req.method} ${req.originalUrl}`);
+  console.log(
+    `[${new Date().toLocaleString("vi-VN")}] ${req.method} ${req.originalUrl}`
+  );
   next();
 });
 
@@ -76,7 +79,10 @@ router.get("/wallet/:username", async (req, res) => {
 // Đăng ký người dùng
 router.post("/user/create", async (req, res) => {
   try {
-    const exists = await User.findOne({ email: req.body.email, username: req.body.username});
+    const exists = await User.findOne({
+      email: req.body.email,
+      username: req.body.username,
+    });
 
     if (exists) {
       return res.json({
@@ -189,18 +195,16 @@ router.post("/login", async (req, res) => {
 router.post("/user/add/balance/:username", async (req, res) => {
   const { username } = req.params;
   const { amount } = req.body;
-  console.log(typeof(amount));
+
+  console.log(typeof amount);
   try {
-    const wallet = await Wallet.findOne({username});
+    const wallet = await Wallet.findOne({ username });
     console.log(wallet);
-    if(wallet) {
+    if (wallet) {
       const total = Number(wallet.balance) + Number(amount);
       const status = await Wallet.findOneAndUpdate(
         { username },
-        { balance: total.toString(),
-          new: true
-         },
-        
+        { balance: total.toString(), new: true }
       );
       if (status) {
         return res.json({
@@ -213,16 +217,13 @@ router.post("/user/add/balance/:username", async (req, res) => {
           message: "Failed to add balance!",
         });
       }
-    
-    }
-    else {
+    } else {
       return res.json({
         success: false,
         message: "Wallet not found!",
       });
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
@@ -245,12 +246,33 @@ router.get("/users", async (req, res) => {
 });
 router.post("/user/info/update/", async (req, res) => {
   try {
-    const { email, bankName, bankNumber, name, phoneNumber } = req.body;
+    const {
+      email,
+      bankName,
+      bankNumber,
+      name,
+      phoneNumber,
+      coinCode,
+      balanceCoin,
+      balance,
+    } = req.body;
+    const coins = {coinCode, balanceCoin};
     const user = await User.findOneAndUpdate(
       { email },
       { bankName, bankNumber, name, phoneNumber }
     );
-    if (user) {
+    const currentBalance = await getBalance(user.username);
+    const addBalance = Number(currentBalance) + Number(balance);
+    const wallet = await Wallet.findOneAndUpdate(
+      {
+        username: user.username,
+      },
+      {
+        balance: addBalance.toString(),
+        $push: { coins: { coinCode, balanceCoin } }
+      }
+    );
+    if (user && wallet) {
       return res.json({
         success: true,
         message: "Update user info successfully!",
