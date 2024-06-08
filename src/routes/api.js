@@ -253,19 +253,19 @@ router.post("/user/info/update/", async (req, res) => {
     if (user) {
       return res.json({
         success: true,
-        message: "Update bank successfully!",
+        message: "Update user info successfully!",
       });
     } else {
       return res.json({
         success: false,
-        message: "Update bank failed!",
+        message: "Update user info failed!",
       });
     }
   } catch (e) {
     console.error(e);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during updating bank.",
+      message: "An error occurred during updating user info.",
     });
   }
 });
