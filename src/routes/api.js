@@ -42,7 +42,7 @@ function checkToken(req, res, next) {
 }
 
 router.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  console.log(`[${new Date().toLocaleString("vi-VN")}] ${req.method} ${req.originalUrl}`);
   next();
 });
 
@@ -245,10 +245,10 @@ router.get("/users", async (req, res) => {
 });
 router.post("/user/info/update/", async (req, res) => {
   try {
-    const { email, bankName, bankNumber } = req.body;
+    const { email, bankName, bankNumber, name, phoneNumber } = req.body;
     const user = await User.findOneAndUpdate(
       { email },
-      { bankName, bankNumber }
+      { bankName, bankNumber, name, phoneNumber }
     );
     if (user) {
       return res.json({
