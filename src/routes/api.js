@@ -2,13 +2,13 @@ const express = require("express");
 const { getUser, getWallet } = require("../app/controllers/HomeController");
 const { getListSell, getListBuy } = require("../utils/getTransaction");
 const router = express.Router();
-const { getBalance } = require("../utils/getBalance");
+const { getBalance, getBalanceCoin } = require("../utils/getBalance");
 const { formatDate } = require("../utils/getCurrentDate");
 const User = require("../app/models/User");
 const Wallet = require("../app/models/Wallet");
 const { genUsername } = require("../utils/genUsername");
 const Transaction = require("../app/models/Transaction");
-const { getCurrentCoin } = require("../utils/getCurrentCoin");
+const { getCurrentCoin, getPriceCoin } = require("../utils/getCurrentCoin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
@@ -53,7 +53,6 @@ router.get("/wallet/:username", async (req, res) => {
   const { username } = req.params;
   try {
     const wallet = await Wallet.findOne({ username });
-    console.log("Wallet details for username:", req.params.username, wallet);
     if (wallet) {
       return res.json({
         success: true,
@@ -139,15 +138,12 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user) {
-      console.log("User: ", user);
-      // So sánh mật khẩu đã mã hóa
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
         const token = createToken({
           username: user.username,
           roles: user.roles,
         });
-        console.log("Roles: ", user.roles);
         if (user.roles.includes("admin")) {
           return res.json({
             success: true,
@@ -192,45 +188,45 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/user/add/balance/:username", async (req, res) => {
-  const { username } = req.params;
-  const { amount } = req.body;
+// router.post("/user/add/balance/:username", async (req, res) => {
+//   const { username } = req.params;
+//   const { amount } = req.body;
 
-  console.log(typeof amount);
-  try {
-    const wallet = await Wallet.findOne({ username });
-    console.log(wallet);
-    if (wallet) {
-      const total = Number(wallet.balance) + Number(amount);
-      const status = await Wallet.findOneAndUpdate(
-        { username },
-        { balance: total.toString(), new: true }
-      );
-      if (status) {
-        return res.json({
-          success: true,
-          message: "Balance added successfully!",
-        });
-      } else {
-        return res.json({
-          success: false,
-          message: "Failed to add balance!",
-        });
-      }
-    } else {
-      return res.json({
-        success: false,
-        message: "Wallet not found!",
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred while adding balance.",
-    });
-  }
-});
+//   console.log(typeof amount);
+//   try {
+//     const wallet = await Wallet.findOne({ username });
+//     console.log(wallet);
+//     if (wallet) {
+//       const total = Number(wallet.balance) + Number(amount);
+//       const status = await Wallet.findOneAndUpdate(
+//         { username },
+//         { balance: total.toString(), new: true }
+//       );
+//       if (status) {
+//         return res.json({
+//           success: true,
+//           message: "Balance added successfully!",
+//         });
+//       } else {
+//         return res.json({
+//           success: false,
+//           message: "Failed to add balance!",
+//         });
+//       }
+//     } else {
+//       return res.json({
+//         success: false,
+//         message: "Wallet not found!",
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "An error occurred while adding balance.",
+//     });
+//   }
+// });
 
 router.get("/users", async (req, res) => {
   try {
@@ -252,27 +248,24 @@ router.post("/user/info/update/", async (req, res) => {
       bankNumber,
       name,
       phoneNumber,
-      coinCode,
-      balanceCoin,
-      balance,
+      wallet
     } = req.body;
-    const coins = {coinCode, balanceCoin};
     const user = await User.findOneAndUpdate(
       { email },
       { bankName, bankNumber, name, phoneNumber }
     );
     const currentBalance = await getBalance(user.username);
-    const addBalance = Number(currentBalance) + Number(balance);
-    const wallet = await Wallet.findOneAndUpdate(
+    const addBalance = Number(currentBalance) + Number(wallet.balance);
+    const walletUpdate = await Wallet.findOneAndUpdate(
       {
         username: user.username,
       },
       {
         balance: addBalance.toString(),
-        $push: { coins: { coinCode, balanceCoin } }
+        coins: wallet.coins,
       }
     );
-    if (user && wallet) {
+    if (user && walletUpdate) {
       return res.json({
         success: true,
         message: "Update user info successfully!",
@@ -291,43 +284,45 @@ router.post("/user/info/update/", async (req, res) => {
     });
   }
 });
-router.post("/sell/:coin", async (req, res) => {
+router.post("/user/sell/coin", async (req, res) => {
+  const { username, code, balance} = req.body;
   try {
-    const wallet = await getWallet(req.body.transUsername);
-    const total = Number(wallet) + Number(req.body.transAmount);
+      // Get the current balance of the coin
+      const currentBalanceCoin = await getBalanceCoin(username, code);
+      // Check if there's enough balance to sell
+      if (Number(currentBalanceCoin) >= Number(balance) && Number(balance) > 0) {
+          // Calculate the new balance after selling
+          const newBalanceCoin = Number(currentBalanceCoin) - Number(balance);
 
-    const trans = {
-      transUsername: req.body.transUsername,
-      transNameCoin: req.params.coin,
-      transType: "sell",
-      transAmount: req.body.transAmount,
-      transTime: formatDate(new Date()),
-    };
+          // Update the new balance in the wallet
+          const wallet = await Wallet.findOneAndUpdate(
+              { username, 'coins.code': code },
+              { $set: { 'coins.$.balance': newBalanceCoin.toString() } }, // Update the new balance
+          );
 
-    const status = await Transaction.create(trans);
-    const plusMoney = await User.findOneAndUpdate(
-      { username: req.body.transUsername },
-      { wallet: total.toString() },
-      { new: true }
-    );
-
-    if (status && plusMoney) {
-      return res.json({
-        success: true,
-        message: "Sold successfully!",
-      });
-    } else {
-      return res.json({
-        success: false,
-        message: "Sold failed!",
-      });
-    }
+          if (wallet) {
+              return res.json({
+                  success: true,
+                  message: "Sell coin successfully!",
+              });
+          } else {
+              return res.json({
+                  success: false,
+                  message: "Sell coin failed!",
+              });
+          }
+      } else {
+          return res.json({
+              success: false,
+              message: "You do not have enough coin to sell!",
+          });
+      }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred during the sell transaction.",
-    });
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: "An error occurred during selling transaction.",
+      });
   }
 });
 

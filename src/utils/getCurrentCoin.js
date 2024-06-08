@@ -1,4 +1,4 @@
-
+const axios = require('axios');
 const API = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,binancecoin,tether,cardano";
 
 async function getCurrentCoin() {
@@ -16,4 +16,32 @@ async function getCurrentCoin() {
     }
 }
 
-module.exports = {getCurrentCoin};
+
+async function getCoinNameFromCode(coinCode) {
+    try {
+      const response = await axios.get(`https://api.coingecko.com/api/v3/coins/${coinCode}`);
+      const coinData = response.data;
+      return coinData.name;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+  
+
+const getPriceCoin = async (coinCode) => {
+    const coinName = await getCoinNameFromCode(coinCode);
+    try {
+        const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${coinName}&vs_currencies=vnd`);
+        const data = response.data;
+        const vndPrice = data.bitcoin.vnd;
+        return vndPrice;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+
+
+module.exports = {getCurrentCoin, getPriceCoin}; 
