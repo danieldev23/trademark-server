@@ -314,7 +314,7 @@ router.post("/user/sell/coin", async (req, res) => {
                   transNameCoin: coinCode,
                   transType: 'sell',
                   transAmount: amount,
-                  transTime: formatDate(new Date())
+                  transTime: new Date().toISOString()
               });
               await transaction.save();
 
@@ -383,7 +383,7 @@ router.post("/user/buy/coin", async (req, res) => {
               transNameCoin: coinCode,
               transType: 'buy',
               transAmount: amount,
-              transTime: formatDate(new Date())
+              transTime: new Date().toISOString()
           });
           await transaction.save();
 
@@ -414,17 +414,19 @@ router.get("/home/settings", (req, res) => {
 });
 router.get("/transactions", async (req, res) => {
   try {
-    const [listSell, listBuy] = await Promise.all([
-      getListSell(),
-      getListBuy(),
-    ]);
-    return res.json({
-      success: true,
-      transactions: {
-        sell: listSell,
-        buy: listBuy,
-      },
-    });
+    const transaction = await Transaction.find();
+    if(transaction) {
+      return res.json({
+        success: true,
+        transaction: transaction
+      });
+    }
+    else {
+      return res.json({
+        success: false,
+        message: "Transaction not found!",
+      });
+    }
   } catch (error) {
     console.error(error);
     return res.status(500).json({
