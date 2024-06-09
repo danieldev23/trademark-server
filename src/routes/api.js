@@ -79,8 +79,7 @@ router.get("/wallet/:username", async (req, res) => {
 router.post("/user/create", async (req, res) => {
   try {
     const exists = await User.findOne({
-      email: req.body.email,
-      username: req.body.username,
+      email: req.body.email
     });
 
     if (exists) {
