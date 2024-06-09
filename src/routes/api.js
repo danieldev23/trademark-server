@@ -8,7 +8,11 @@ const User = require("../app/models/User");
 const Wallet = require("../app/models/Wallet");
 const { genUsername } = require("../utils/genUsername");
 const Transaction = require("../app/models/Transaction");
-const { getCurrentCoin, getPriceCoin, getCoinCodeFromCoinbase } = require("../utils/getCurrentCoin");
+const {
+  getCurrentCoin,
+  getPriceCoin,
+  getCoinCodeFromCoinbase,
+} = require("../utils/getCurrentCoin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
@@ -79,7 +83,7 @@ router.get("/wallet/:username", async (req, res) => {
 router.post("/user/create", async (req, res) => {
   try {
     const exists = await User.findOne({
-      email: req.body.email
+      email: req.body.email,
     });
 
     if (exists) {
@@ -241,14 +245,7 @@ router.get("/users", async (req, res) => {
 });
 router.post("/user/info/update/", async (req, res) => {
   try {
-    const {
-      email,
-      bankName,
-      bankNumber,
-      name,
-      phoneNumber,
-      wallet
-    } = req.body;
+    const { email, bankName, bankNumber, name, phoneNumber, wallet } = req.body;
     const user = await User.findOneAndUpdate(
       { email },
       { bankName, bankNumber, name, phoneNumber }
@@ -275,35 +272,29 @@ router.post("/user/info/update/", async (req, res) => {
   }
 });
 
-router.get('/coins', async (req, res) => {
+router.get("/coins", async (req, res) => {
   try {
-      const coins = await getCoinCodeFromCoinbase();
-      if (coins) {
-          return res.json({
-              success: true,
-              coins
-          });
-      } else {
-          return res.json({
-              success: false,
-              message: 'Coins not found!'
-          });
-      }
+    const coins = getCoinCodeFromCoinbase();
+
+    if (coins) {
+      return res.json({
+        success: true,
+        coins,
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "Coins not found!",
+      });
+    }
   } catch (error) {
-      console.error(error);
-      res.status(500).send('Đã có lỗi xảy ra');
+    console.error(error);
+    res.status(500).send("Đã có lỗi xảy ra");
   }
 });
 router.post("/admin/user/info/update/", async (req, res) => {
   try {
-    const {
-      email,
-      bankName,
-      bankNumber,
-      name,
-      phoneNumber,
-      wallet
-    } = req.body;
+    const { email, bankName, bankNumber, name, phoneNumber, wallet } = req.body;
     const user = await User.findOneAndUpdate(
       { email },
       { bankName, bankNumber, name, phoneNumber }
@@ -342,59 +333,64 @@ router.post("/user/sell/coin", async (req, res) => {
   const { username, coinCode, amount } = req.body;
 
   try {
-      const priceCoin = await getPriceCoin(coinCode);
-      const fixedPriceCoin = parseFloat(priceCoin).toFixed(0);
-      const walletBalance = await getBalance(username);
-      const currentBalanceCoin = await getBalanceCoin(username, coinCode);
+    const priceCoin = await getPriceCoin(coinCode);
+    const fixedPriceCoin = parseFloat(priceCoin).toFixed(0);
+    const walletBalance = await getBalance(username);
+    const currentBalanceCoin = await getBalanceCoin(username, coinCode);
 
-      if (Number(currentBalanceCoin) >= Number(amount) && Number(amount) > 0) {
-          const newBalanceCoin = (Number(currentBalanceCoin) - Number(amount)).toString();
-          const newWalletBalance = (Number(walletBalance) + Number(fixedPriceCoin) * Number(amount)).toString();
+    if (Number(currentBalanceCoin) >= Number(amount) && Number(amount) > 0) {
+      const newBalanceCoin = (
+        Number(currentBalanceCoin) - Number(amount)
+      ).toString();
+      const newWalletBalance = (
+        Number(walletBalance) +
+        Number(fixedPriceCoin) * Number(amount)
+      ).toString();
 
-          const walletUpdateResult = await Wallet.findOneAndUpdate(
-              { username, 'coins.code': coinCode },
-              {
-                  $set: {
-                      'coins.$.balance': newBalanceCoin,
-                      balance: newWalletBalance
-                  }
-              },
-              { new: true }
-          );
+      const walletUpdateResult = await Wallet.findOneAndUpdate(
+        { username, "coins.code": coinCode },
+        {
+          $set: {
+            "coins.$.balance": newBalanceCoin,
+            balance: newWalletBalance,
+          },
+        },
+        { new: true }
+      );
 
-          if (walletUpdateResult) {
-              const transaction = new Transaction({
-                  transUsername: username,
-                  transNameCoin: coinCode,
-                  transType: 'sell',
-                  transAmount: amount,
-                  transTime: new Date().toISOString()
-              });
-              await transaction.save();
+      if (walletUpdateResult) {
+        const transaction = new Transaction({
+          transUsername: username,
+          transNameCoin: coinCode,
+          transType: "sell",
+          transAmount: amount,
+          transTime: new Date().toISOString(),
+        });
+        await transaction.save();
 
-              return res.json({
-                  success: true,
-                  wallet: walletUpdateResult,
-                  message: "Sell coin successfully!",
-              });
-          } else {
-              return res.json({
-                  success: false,
-                  message: "Sell coin failed!",
-              });
-          }
+        return res.json({
+          success: true,
+          wallet: walletUpdateResult,
+          message: "Sell coin successfully!",
+        });
       } else {
-          return res.json({
-              success: false,
-              message: "You do not have enough coin to sell!",
-          });
-      }
-  } catch (error) {
-      console.error(error);
-      return res.status(500).json({
+        return res.json({
           success: false,
-          message: "An error occurred during the selling transaction.",
+          message: "Sell coin failed!",
+        });
+      }
+    } else {
+      return res.json({
+        success: false,
+        message: "You do not have enough coin to sell!",
       });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred during the selling transaction.",
+    });
   }
 });
 
@@ -402,66 +398,69 @@ router.post("/user/buy/coin", async (req, res) => {
   const { username, amount, coinCode } = req.body;
 
   try {
-      const priceCoin = await getPriceCoin(coinCode);
-      const fixedPriceCoin = parseFloat(priceCoin).toFixed(0);
-      const walletBalance = await getBalance(username);
-      const totalCost = (Number(fixedPriceCoin) * Number(amount)).toFixed(0);
+    const priceCoin = await getPriceCoin(coinCode);
+    const fixedPriceCoin = parseFloat(priceCoin).toFixed(0);
+    const walletBalance = await getBalance(username);
+    const totalCost = (Number(fixedPriceCoin) * Number(amount)).toFixed(0);
 
-      if (Number(walletBalance) >= Number(totalCost) && Number(amount) > 0) {
-          const currentBalanceCoin = await getBalanceCoin(username, coinCode);
-          const newBalanceCoin = (Number(currentBalanceCoin) + Number(amount)).toString();
-          const newWalletBalance = (Number(walletBalance) - Number(totalCost)).toString();
+    if (Number(walletBalance) >= Number(totalCost) && Number(amount) > 0) {
+      const currentBalanceCoin = await getBalanceCoin(username, coinCode);
+      const newBalanceCoin = (
+        Number(currentBalanceCoin) + Number(amount)
+      ).toString();
+      const newWalletBalance = (
+        Number(walletBalance) - Number(totalCost)
+      ).toString();
 
-          const walletUpdateResult = await Wallet.findOneAndUpdate(
-              { username, 'coins.code': coinCode },
-              {
-                  $set: {
-                      'coins.$.balance': newBalanceCoin,
-                      balance: newWalletBalance
-                  }
-              },
-              { new: true }
-          );
+      const walletUpdateResult = await Wallet.findOneAndUpdate(
+        { username, "coins.code": coinCode },
+        {
+          $set: {
+            "coins.$.balance": newBalanceCoin,
+            balance: newWalletBalance,
+          },
+        },
+        { new: true }
+      );
 
-          if (!walletUpdateResult) {
-              await Wallet.findOneAndUpdate(
-                  { username },
-                  {
-                      $push: { coins: { code: coinCode, balance: newBalanceCoin } },
-                      balance: newWalletBalance
-                  }
-              );
+      if (!walletUpdateResult) {
+        await Wallet.findOneAndUpdate(
+          { username },
+          {
+            $push: { coins: { code: coinCode, balance: newBalanceCoin } },
+            balance: newWalletBalance,
           }
-
-          const transaction = new Transaction({
-              transUsername: username,
-              transNameCoin: coinCode,
-              transType: 'buy',
-              transAmount: amount,
-              transTime: new Date().toISOString()
-          });
-          await transaction.save();
-
-          return res.json({
-              success: true,
-              wallet: walletUpdateResult,
-              message: "Buy coin successfully!",
-          });
-      } else {
-          return res.json({
-              success: false,
-              message: "You do not have enough balance to buy the coin!",
-          });
+        );
       }
-  } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-          success: false,
-          message: "An error occurred during the buying transaction.",
+
+      const transaction = new Transaction({
+        transUsername: username,
+        transNameCoin: coinCode,
+        transType: "buy",
+        transAmount: amount,
+        transTime: new Date().toISOString(),
       });
+      await transaction.save();
+
+      return res.json({
+        success: true,
+        wallet: walletUpdateResult,
+        message: "Buy coin successfully!",
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "You do not have enough balance to buy the coin!",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred during the buying transaction.",
+    });
   }
 });
-
 
 router.get("/home/settings", (req, res) => {
   return res.json({
@@ -471,13 +470,12 @@ router.get("/home/settings", (req, res) => {
 router.get("/transactions", async (req, res) => {
   try {
     const transaction = await Transaction.find();
-    if(transaction) {
+    if (transaction) {
       return res.json({
         success: true,
-        transactions: transaction
+        transactions: transaction,
       });
-    }
-    else {
+    } else {
       return res.json({
         success: false,
         message: "Transaction not found!",
