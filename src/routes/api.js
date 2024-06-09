@@ -253,6 +253,41 @@ router.post("/user/info/update/", async (req, res) => {
       { email },
       { bankName, bankNumber, name, phoneNumber }
     );
+    // const currentBalance = await getBalance(user.username);
+    // const addBalance = Number(currentBalance) + Number(wallet.balance);
+    if (user) {
+      return res.json({
+        success: true,
+        message: "Update user info successfully!",
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "Update user info failed!",
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred during updating user info.",
+    });
+  }
+});
+router.post("/admin/user/info/update/", async (req, res) => {
+  try {
+    const {
+      email,
+      bankName,
+      bankNumber,
+      name,
+      phoneNumber,
+      wallet
+    } = req.body;
+    const user = await User.findOneAndUpdate(
+      { email },
+      { bankName, bankNumber, name, phoneNumber }
+    );
     const currentBalance = await getBalance(user.username);
     const addBalance = Number(currentBalance) + Number(wallet.balance);
     const walletUpdate = await Wallet.findOneAndUpdate(
