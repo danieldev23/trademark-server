@@ -288,25 +288,15 @@ router.post("/user/sell/coin", async (req, res) => {
   const { username, coinCode, amount } = req.body;
 
   try {
-      // Get the current price of the coin
       const priceCoin = await getPriceCoin(coinCode);
       const fixedPriceCoin = parseFloat(priceCoin).toFixed(0);
-
-      // Get the user's wallet balance
       const walletBalance = await getBalance(username);
-
-      // Get the current balance of the coin in the user's wallet
       const currentBalanceCoin = await getBalanceCoin(username, coinCode);
 
-      // Check if the user has enough balance to sell the specified amount of the coin
       if (Number(currentBalanceCoin) >= Number(amount) && Number(amount) > 0) {
-          // Calculate the new coin balance after selling
           const newBalanceCoin = (Number(currentBalanceCoin) - Number(amount)).toString();
-
-          // Calculate the new wallet balance after selling the coin
           const newWalletBalance = (Number(walletBalance) + Number(fixedPriceCoin) * Number(amount)).toString();
 
-          // Update the user's wallet with the new coin balance and wallet balance
           const walletUpdateResult = await Wallet.findOneAndUpdate(
               { username, 'coins.code': coinCode },
               {
@@ -319,6 +309,15 @@ router.post("/user/sell/coin", async (req, res) => {
           );
 
           if (walletUpdateResult) {
+              const transaction = new Transaction({
+                  transUsername: username,
+                  transNameCoin: coinCode,
+                  transType: 'sell',
+                  transAmount: amount,
+                  transTime: formatDate(new Date())
+              });
+              await transaction.save();
+
               return res.json({
                   success: true,
                   message: "Sell coin successfully!",
@@ -348,28 +347,16 @@ router.post("/user/buy/coin", async (req, res) => {
   const { username, amount, coinCode } = req.body;
 
   try {
-      // Get the current price of the coin
       const priceCoin = await getPriceCoin(coinCode);
       const fixedPriceCoin = parseFloat(priceCoin).toFixed(0);
-
-      // Get the user's current wallet balance
       const walletBalance = await getBalance(username);
-
-      // Calculate the total cost of the coins to be bought
       const totalCost = (Number(fixedPriceCoin) * Number(amount)).toFixed(0);
 
-      // Check if the user has enough balance to buy the specified amount of the coin
       if (Number(walletBalance) >= Number(totalCost) && Number(amount) > 0) {
-          // Get the current balance of the coin in the user's wallet
           const currentBalanceCoin = await getBalanceCoin(username, coinCode);
-
-          // Calculate the new coin balance after buying
           const newBalanceCoin = (Number(currentBalanceCoin) + Number(amount)).toString();
-
-          // Calculate the new wallet balance after deducting the total cost
           const newWalletBalance = (Number(walletBalance) - Number(totalCost)).toString();
 
-          // Update the user's wallet with the new coin balance and wallet balance
           const walletUpdateResult = await Wallet.findOneAndUpdate(
               { username, 'coins.code': coinCode },
               {
@@ -381,7 +368,6 @@ router.post("/user/buy/coin", async (req, res) => {
               { new: true }
           );
 
-          // If the coin doesn't exist, add it to the wallet
           if (!walletUpdateResult) {
               await Wallet.findOneAndUpdate(
                   { username },
@@ -391,6 +377,15 @@ router.post("/user/buy/coin", async (req, res) => {
                   }
               );
           }
+
+          const transaction = new Transaction({
+              transUsername: username,
+              transNameCoin: coinCode,
+              transType: 'buy',
+              transAmount: amount,
+              transTime: formatDate(new Date())
+          });
+          await transaction.save();
 
           return res.json({
               success: true,
