@@ -45,18 +45,16 @@ const getPriceCoin = async (coinCode) => {
 
 async function getCoinCodeFromCoinbase() {
   try {
-    const response = await axios.get("https://api.coinbase.com/v2/currencies");
-    const currencies = response.data.data;
-    const coinCodes = currencies.map((currency) => currency.id);
-    return coinCodes;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
+    const response = await axios.get("https://api.coingecko.com/api/v3/coins/list");
+    const coins = response.data;
+
+    // Lấy symbol từ dữ liệu trả về
+    const coinSymbols = coins.map(coin => coin.symbol);
+
+    return coinSymbols;
+} catch (error) {
+    console.error('Error fetching coin symbols:', error);
+}
 }
 
-getCoinCodeFromCoinbase().then((coinCodes) => {
-  console.log(coinCodes);
-}
-);
-module.exports = { getCurrentCoin, getPriceCoin };
+module.exports = { getCurrentCoin, getPriceCoin, getCoinCodeFromCoinbase };

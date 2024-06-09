@@ -8,7 +8,7 @@ const User = require("../app/models/User");
 const Wallet = require("../app/models/Wallet");
 const { genUsername } = require("../utils/genUsername");
 const Transaction = require("../app/models/Transaction");
-const { getCurrentCoin, getPriceCoin } = require("../utils/getCurrentCoin");
+const { getCurrentCoin, getPriceCoin, getCoinCodeFromCoinbase } = require("../utils/getCurrentCoin");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
@@ -277,9 +277,18 @@ router.post("/user/info/update/", async (req, res) => {
 
 router.get('/coins', async (req, res) => {
   try {
-      const response = await axios.get('https://api.coinbase.com/v2/currencies');
-      const coins = response.data.data;
-      res.json(coins);
+      const coins = await getCoinCodeFromCoinbase();
+      if (coins) {
+          return res.json({
+              success: true,
+              coins
+          });
+      } else {
+          return res.json({
+              success: false,
+              message: 'Coins not found!'
+          });
+      }
   } catch (error) {
       console.error(error);
       res.status(500).send('Đã có lỗi xảy ra');
