@@ -418,7 +418,7 @@ router.get("/transactions", async (req, res) => {
     if(transaction) {
       return res.json({
         success: true,
-        transaction: transaction
+        transactions: transaction
       });
     }
     else {
