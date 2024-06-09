@@ -274,6 +274,17 @@ router.post("/user/info/update/", async (req, res) => {
     });
   }
 });
+
+router.get('/coins', async (req, res) => {
+  try {
+      const response = await axios.get('https://api.coinbase.com/v2/currencies');
+      const coins = response.data.data;
+      res.json(coins);
+  } catch (error) {
+      console.error(error);
+      res.status(500).send('Đã có lỗi xảy ra');
+  }
+});
 router.post("/admin/user/info/update/", async (req, res) => {
   try {
     const {
@@ -354,6 +365,7 @@ router.post("/user/sell/coin", async (req, res) => {
 
               return res.json({
                   success: true,
+                  wallet: walletUpdateResult,
                   message: "Sell coin successfully!",
               });
           } else {
@@ -423,6 +435,7 @@ router.post("/user/buy/coin", async (req, res) => {
 
           return res.json({
               success: true,
+              wallet: walletUpdateResult,
               message: "Buy coin successfully!",
           });
       } else {

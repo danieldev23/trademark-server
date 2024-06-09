@@ -43,5 +43,20 @@ const getPriceCoin = async (coinCode) => {
   }
 };
 
+async function getCoinCodeFromCoinbase() {
+  try {
+    const response = await axios.get("https://api.coinbase.com/v2/currencies");
+    const currencies = response.data.data;
+    const coinCodes = currencies.map((currency) => currency.id);
+    return coinCodes;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
 
+getCoinCodeFromCoinbase().then((coinCodes) => {
+  console.log(coinCodes);
+}
+);
 module.exports = { getCurrentCoin, getPriceCoin };
