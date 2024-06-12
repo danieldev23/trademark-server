@@ -33,16 +33,14 @@ function checkToken(req, res, next) {
       if (err) {
         return res
           .status(401)
-          .json({ success: false, message: "Invalid token." });
+          .json({ success: false, message: "Token không hợp lệ." });
       } else {
         req.decoded = decoded;
         next();
       }
     });
   } else {
-    return res
-      .status(401)
-      .json({ success: false, message: "Tokens not provided." });
+    return res.status(401).json({ success: false, message: "Không có token." });
   }
 }
 
@@ -68,17 +66,18 @@ router.get("/wallet/:username", async (req, res) => {
     } else {
       return res.json({
         success: false,
-        message: "Wallet not found!",
+        message: "Không tìm thấy ví!",
       });
     }
   } catch (error) {
-    console.error("An error occurred while retrieving the wallet:", error);
+    console.error("Đã xảy ra lỗi khi lấy ví:", error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while retrieving wallet.",
+      message: "Đã xảy ra lỗi khi lấy ví.",
     });
   }
 });
+
 // Đăng ký người dùng
 router.post("/user/create", async (req, res) => {
   try {
@@ -89,7 +88,7 @@ router.post("/user/create", async (req, res) => {
     if (exists) {
       return res.json({
         success: false,
-        message: "User already exists",
+        message: "Người dùng đã tồn tại",
       });
     } else {
       // Mã hóa mật khẩu
@@ -117,13 +116,13 @@ router.post("/user/create", async (req, res) => {
         });
         return res.json({
           success: true,
-          message: "User created successfully!",
+          message: "Tạo người dùng thành công!",
           token, // Trả về token
         });
       } else {
         return res.json({
           success: false,
-          message: "User creation failed!",
+          message: "Tạo người dùng thất bại!",
         });
       }
     }
@@ -131,10 +130,11 @@ router.post("/user/create", async (req, res) => {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during user creation.",
+      message: "Đã xảy ra lỗi khi tạo người dùng.",
     });
   }
 });
+
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -156,7 +156,7 @@ router.post("/login", async (req, res) => {
             bankNumber: user.bankNumber,
             bankName: user.bankName,
             wallet: user.wallet,
-            message: "Login successfully!",
+            message: "Đăng nhập thành công!",
             roles: ["admin"],
             token,
           });
@@ -165,7 +165,7 @@ router.post("/login", async (req, res) => {
             success: true,
             name: user.name,
             username: user.username,
-            message: "Login successfully!",
+            message: "Đăng nhập thành công!",
             roles: ["user"], // Đảm bảo roles là một mảng
             token,
           });
@@ -173,63 +173,23 @@ router.post("/login", async (req, res) => {
       } else {
         return res.json({
           success: false,
-          message: "Invalid credentials!",
+          message: "Thông tin đăng nhập không hợp lệ!",
         });
       }
     } else {
       return res.json({
         success: false,
-        message: "User not found!",
+        message: "Không tìm thấy người dùng!",
       });
     }
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during login.",
+      message: "Đã xảy ra lỗi khi đăng nhập.",
     });
   }
 });
-
-// router.post("/user/add/balance/:username", async (req, res) => {
-//   const { username } = req.params;
-//   const { amount } = req.body;
-
-//   console.log(typeof amount);
-//   try {
-//     const wallet = await Wallet.findOne({ username });
-//     console.log(wallet);
-//     if (wallet) {
-//       const total = Number(wallet.balance) + Number(amount);
-//       const status = await Wallet.findOneAndUpdate(
-//         { username },
-//         { balance: total.toString(), new: true }
-//       );
-//       if (status) {
-//         return res.json({
-//           success: true,
-//           message: "Balance added successfully!",
-//         });
-//       } else {
-//         return res.json({
-//           success: false,
-//           message: "Failed to add balance!",
-//         });
-//       }
-//     } else {
-//       return res.json({
-//         success: false,
-//         message: "Wallet not found!",
-//       });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "An error occurred while adding balance.",
-//     });
-//   }
-// });
 
 router.get("/users", async (req, res) => {
   try {
@@ -239,10 +199,11 @@ router.get("/users", async (req, res) => {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while retrieving users.",
+      message: "Đã xảy ra lỗi khi lấy danh sách người dùng.",
     });
   }
 });
+
 router.post("/user/info/update/", async (req, res) => {
   try {
     const { email, bankName, bankNumber, name, phoneNumber, wallet } = req.body;
@@ -255,19 +216,19 @@ router.post("/user/info/update/", async (req, res) => {
     if (user) {
       return res.json({
         success: true,
-        message: "Update user info successfully!",
+        message: "Cập nhật thông tin người dùng thành công!",
       });
     } else {
       return res.json({
         success: false,
-        message: "Update user info failed!",
+        message: "Cập nhật thông tin người dùng thất bại!",
       });
     }
   } catch (e) {
     console.error(e);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during updating user info.",
+      message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng.",
     });
   }
 });
@@ -284,7 +245,7 @@ router.get("/coins", async (req, res) => {
     } else {
       return res.json({
         success: false,
-        message: "Coins not found!",
+        message: "Không tìm thấy đồng coin!",
       });
     }
   } catch (error) {
@@ -292,6 +253,7 @@ router.get("/coins", async (req, res) => {
     res.status(500).send("Đã có lỗi xảy ra");
   }
 });
+
 router.post("/admin/user/info/update/", async (req, res) => {
   try {
     const { email, bankName, bankNumber, name, phoneNumber, wallet } = req.body;
@@ -313,22 +275,23 @@ router.post("/admin/user/info/update/", async (req, res) => {
     if (user && walletUpdate) {
       return res.json({
         success: true,
-        message: "Update user info successfully!",
+        message: "Cập nhật thông tin người dùng thành công!",
       });
     } else {
       return res.json({
         success: false,
-        message: "Update user info failed!",
+        message: "Cập nhật thông tin người dùng thất bại!",
       });
     }
   } catch (e) {
     console.error(e);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during updating user info.",
+      message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng.",
     });
   }
 });
+
 router.post("/user/sell/coin", async (req, res) => {
   const { username, coinCode, amount } = req.body;
 
@@ -371,25 +334,25 @@ router.post("/user/sell/coin", async (req, res) => {
         return res.json({
           success: true,
           wallet: walletUpdateResult,
-          message: "Sell coin successfully!",
+          message: "Bán coin thành công!",
         });
       } else {
         return res.json({
           success: false,
-          message: "Sell coin failed!",
+          message: "Bán coin thất bại!",
         });
       }
     } else {
       return res.json({
         success: false,
-        message: "You do not have enough coin to sell!",
+        message: "Bạn không có đủ coin để bán!",
       });
     }
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during the selling transaction.",
+      message: "Đã xảy ra lỗi khi thực hiện giao dịch bán.",
     });
   }
 });
@@ -445,19 +408,19 @@ router.post("/user/buy/coin", async (req, res) => {
       return res.json({
         success: true,
         wallet: walletUpdateResult,
-        message: "Buy coin successfully!",
+        message: "Mua coin thành công!",
       });
     } else {
       return res.json({
         success: false,
-        message: "You do not have enough balance to buy the coin!",
+        message: "Bạn không có đủ số dư để mua coin!",
       });
     }
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during the buying transaction.",
+      message: "Đã xảy ra lỗi khi thực hiện giao dịch mua.",
     });
   }
 });
@@ -467,6 +430,7 @@ router.get("/home/settings", (req, res) => {
     websiteName: "BO Web",
   });
 });
+
 router.get("/transactions", async (req, res) => {
   try {
     const transaction = await Transaction.find();
@@ -478,14 +442,14 @@ router.get("/transactions", async (req, res) => {
     } else {
       return res.json({
         success: false,
-        message: "Transaction not found!",
+        message: "Không tìm thấy giao dịch!",
       });
     }
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while fetching transactions.",
+      message: "Đã xảy ra lỗi khi lấy giao dịch.",
     });
   }
 });
@@ -508,14 +472,14 @@ router.get("/coin/list", async (req, res) => {
       } else {
         return res.json({
           success: false,
-          message: "Do not get current coin",
+          message: "Không lấy được thông tin coin hiện tại",
         });
       }
     })
     .catch((err) => {
       return res.json({
         success: false,
-        message: "Do not get current coin",
+        message: "Không lấy được thông tin coin hiện tại",
       });
     });
 });
