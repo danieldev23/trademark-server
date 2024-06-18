@@ -6,6 +6,7 @@ const { getBalance, getBalanceCoin } = require("../utils/getBalance");
 const { formatDate } = require("../utils/getCurrentDate");
 const User = require("../app/models/User");
 const Wallet = require("../app/models/Wallet");
+const Bank = require("../app/models/Bank");
 const { genUsername } = require("../utils/genUsername");
 const Transaction = require("../app/models/Transaction");
 const {
@@ -78,6 +79,92 @@ router.get("/wallet/:username", async (req, res) => {
   }
 });
 
+router.post('/admin/bank/create', async (req, res) => {
+  try {
+    const { name, account, user, isActive } = req.body;
+    const bank = new Bank({
+      name,
+      account,
+      user,
+      // isActive,
+    });
+    await bank.save();
+    return res.json({
+      success: true,
+      message: "Tạo tài khoản ngân hàng thành công!",
+    });
+  }
+  catch(error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Đã xảy ra lỗi khi tạo tài khoản ngân hàng.",
+    });
+  }
+});
+
+router.get('/admin/bank', async (req, res) => {
+  try {
+    const bank = await Bank.find();
+    return res.json(bank);
+  }
+  catch(error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Đã xảy ra lỗi khi lấy thông tin tài khoản ngân hàng.",
+    });
+  }
+});
+router.post("/api/admin/bank/update/:id", async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body;
+  try {
+    const bank = await Bank.findByIdAndUpdate(id, { isActive }, { new: true });
+    if (bank) {
+      res.json({
+        success: true,
+        message: "Cập nhật tài khoản ngân hàng thành công.",
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản ngân hàng.",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Có lỗi xảy ra khi cập nhật tài khoản ngân hàng.",
+    });
+  }
+});
+
+router.post('/admin/bank/delete/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bank = await Bank.findByIdAndDelete(id);
+    if (bank) {
+      return res.json({
+        success: true,
+        message: "Xóa tài khoản ngân hàng thành công!",
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "Xóa tài khoản ngân hàng thất bại!",
+      });
+    }
+  }
+  catch(error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Đã xảy ra lỗi khi xóa tài khoản ngân hàng.",
+    });
+  }
+});
 // Đăng ký người dùng
 router.post("/user/create", async (req, res) => {
   try {
